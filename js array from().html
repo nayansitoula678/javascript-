@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>JavaScript Arrays</h1>
+<h2>The from() Method</h2>
+
+<p>The from() method can return an array from any variable with a length property.</p>
+<p>It can return a string as an array:</p>
+<p id="demo"></p>
+
+<script>
+const myNumbers = [1,2,3,4];
+const myArr = Array.from(myNumbers, (x) => x * 2);
+document.getElementById("demo").innerHTML = myArr;
+</script>
+
+</body>
+</html>
