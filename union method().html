@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>JavaScript Sets</h1>
+<h2>The Set.union() Method</h2>
+<p>The <b>Set.union()</b> method returns a new set containing the elements which are in this set,
+or in the argument set, or in both:</p>
+
+<p id="demo"></p>
+
+<script>
+const A = new Set(['a','b','c']);
+const B = new Set(['b','c','d']);
+
+const C = A.union(B);
+
+let text = "";
+for (const x of C) {
+  text += x;
+}
+document.getElementById("demo").innerHTML = "The union is: " + text;
+</script>
+</body>
+</html>
