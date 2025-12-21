@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>JavaScript Sets</h1>
+<h2>The values() Method</h2>
+
+<p>The values() method returns an Iterator object with all the values in a Set.</p>
+
+<p id="demo"></p>
+
+<script>
+// Create a Set
+const letters = new Set(["a","b","c"]);
+
+// Create an Iterator
+const myIterator = letters.values();
+
+// List all Elements
+let text = "";
+for (const x of myIterator) {
+  text += x + "<br>";
+}
+
+document.getElementById("demo").innerHTML = text;
+</script>
+</body>
+</html>
