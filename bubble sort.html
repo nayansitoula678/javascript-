@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bubble Sort Visualization</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0f0f14;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        #controls {
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 5px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #3a86ff;
+            color: #fff;
+        }
+
+        button:hover {
+            background: #265dbe;
+        }
+
+        #array-container {
+            width: 90%;
+            height: 350px;
+            display: flex;
+            align-items: flex-end;
+            border: 1px solid #2a2a40;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .bar {
+            flex: 1;
+            margin: 0 2px;
+            background: #cccccc;
+            transition: height 0.3s, background-color 0.3s;
+        }
+
+        .comparing {
+            background: #ff4d4d;
+        }
+
+        .sorted {
+            background: #4cd137;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Bubble Sort Visualization</h1>
+
+<div id="controls">
+    <button onclick="generateArray()">Generate Array</button>
+    <button onclick="bubbleSort()">Start Bubble Sort</button>
+</div>
+
+<div id="array-container"></div>
+
+<script>
+    const container = document.getElementById("array-container");
+    let array = [];
+    const SIZE = 30;
+    const SPEED = 200;
+
+    // Generate random array
+    function generateArray() {
+        container.innerHTML = "";
+        array = [];
+
+        for (let i = 0; i < SIZE; i++) {
+            const value = Math.floor(Math.random() * 300) + 20;
+            array.push(value);
+
+            const bar = document.createElement("div");
+            bar.classList.add("bar");
+            bar.style.height = value + "px";
+            container.appendChild(bar);
+        }
+    }
+
+    // Sleep function for animation delay
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Bubble Sort Algorithm with Visualization
+    async function bubbleSort() {
+        const bars = document.getElementsByClassName("bar");
+
+        for (let i = 0; i < array.length; i++) {
+            let swapped = false;
+
+            for (let j = 0; j < array.length - i - 1; j++) {
+
+                // Highlight bars being compared
+                bars[j].classList.add("comparing");
+                bars[j + 1].classList.add("comparing");
+
+                await sleep(SPEED);
+
+                if (array[j] > array[j + 1]) {
+                    // Swap values in array
+                    let temp = array[j];
+                    array[j] = array[j + 1];
+                    array[j + 1] = temp;
+
+                    // Swap heights visually
+                    bars[j].style.height = array[j] + "px";
+                    bars[j + 1].style.height = array[j + 1] + "px";
+
+                    swapped = true;
+                }
+
+                bars[j].classList.remove("comparing");
+                bars[j + 1].classList.remove("comparing");
+            }
+
+            // Mark last sorted element
+            bars[array.length - i - 1].classList.add("sorted");
+
+            // Optimization: stop if already sorted
+            if (!swapped) break;
+        }
+
+        // Mark remaining bars as sorted
+        for (let bar of bars) {
+            bar.classList.add("sorted");
+        }
+    }
+
+    // Initial array on load
+    generateArray();
+</script>
+
+</body>
+</html>
