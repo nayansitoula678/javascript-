@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tower of Hanoi Visualization</title>
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --panel: #151522;
+      --border: #2a2a40;
+      --text: #ffffff;
+      --muted: #b9b9c7;
+      --accent: #3a86ff;
+      --accent2: #4cd137;
+      --warn: #ff4d4d;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 18px 0 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 14px;
+      font-size: 14px;
+      text-align: center;
+      max-width: 900px;
+      padding: 0 16px;
+      line-height: 1.35;
+    }
+
+    #controls {
+      width: min(1000px, 92vw);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      box-sizing: border-box;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input[type="number"] {
+      width: 80px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0e0e16;
+      color: var(--text);
+      outline: none;
+    }
+
+    input[type="range"] {
+      width: 170px;
+      accent-color: var(--accent);
+    }
+
+    button {
+      padding: 10px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+    }
+    button:hover { filter: brightness(0.95); }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary { background: #2f2f46; }
+    .btn-secondary:hover { filter: brightness(1.05); }
+
+    .btn-danger { background: var(--warn); }
+
+    #stats {
+      width: min(1000px, 92vw);
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .card {
+      flex: 1;
+      min-width: 220px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-sizing: border-box;
+    }
+
+    #scene {
+      width: min(1000px, 92vw);
+      height: 420px;
+      margin: 12px 0 22px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .tower-area {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 33.333%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 18px;
+      box-sizing: border-box;
+    }
+    .tower-area:nth-child(1) { left: 0; }
+    .tower-area:nth-child(2) { left: 33.333%; }
+    .tower-area:nth-child(3) { left: 66.666%; }
+
+    .base {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 10px;
+      border-radius: 6px;
+      background: #2a2a40;
+    }
+
+    .pole {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 280px;
+      border-radius: 8px;
+      background: #3a3a57;
+    }
+
+    .tower-label {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.6px;
+    }
+
+    /* Disk container (stack) */
+    .stack {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 82%;
+      height: 300px;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .disk {
+      height: 22px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      transition: transform 0.25s;
+    }
+
+    .disk.moving {
+      outline: 2px solid rgba(58, 134, 255, 0.8);
+      box-shadow: 0 0 0 6px rgba(58, 134, 255, 0.14);
+    }
+
+    .hint {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tower of Hanoi Visualization</h1>
+  <p class="subtitle">
+    Move all disks from <span class="mono">A</span> to <span class="mono">C</span>. Only one disk at a time, and never place a bigger disk on a smaller disk.
+    This animation uses the classic recursive solution.
+  </p>
+
+  <div id="controls">
+    <div class="control-group">
+      <label>Disks:</label>
+      <input id="diskCount" type="number" min="1" max="10" value="5" />
+      <label>Speed:</label>
+      <input id="speed" type="range" min="40" max="800" value="220" />
+      <span class="hint">ms/step: <span id="speedLabel" class="mono">220</span></span>
+    </div>
+
+    <div class="control-group">
+      <button id="btnReset" class="btn-secondary">Reset</button>
+      <button id="btnSolve">Solve</button>
+      <button id="btnPause" class="btn-secondary" disabled>Pause</button>
+      <button id="btnStep" class="btn-secondary">Step</button>
+      <button id="btnStop" class="btn-danger" disabled>Stop</button>
+    </div>
+  </div>
+
+  <div id="stats">
+    <div class="card">
+      <div><strong>Moves:</strong> <span id="moveCount" class="mono">0</span></div>
+      <div><strong>Minimum moves:</strong> <span id="minMoves" class="mono">31</span></div>
+      <div class="hint">Minimum = 2ⁿ − 1</div>
+    </div>
+    <div class="card">
+      <div><strong>Current action:</strong></div>
+      <div id="action" class="mono">Ready.</div>
+    </div>
+  </div>
+
+  <div id="scene">
+    <div class="tower-area" data-tower="A">
+      <div class="pole"></div>
+      <div class="base"></div>
+      <div class="stack" id="stackA"></div>
+      <div class="tower-label">A</div>
+    </div>
+
+    <div class="tower-area" data-tower="B">
+      <div class="pole"></div>
+      <div class="base"></div>
+      <div class="stack" id="stackB"></div>
+      <div class="tower-label">B</div>
+    </div>
+
+    <div class="tower-area" data-tower="C">
+      <div class="pole"></div>
+      <div class="base"></div>
+      <div class="stack" id="stackC"></div>
+      <div class="tower-label">C</div>
+    </div>
+  </div>
+
+<script>
+  // ====== State ======
+  const stackEls = {
+    A: document.getElementById("stackA"),
+    B: document.getElementById("stackB"),
+    C: document.getElementById("stackC"),
+  };
+
+  const diskCountInput = document.getElementById("diskCount");
+  const speedInput = document.getElementById("speed");
+  const speedLabel = document.getElementById("speedLabel");
+
+  const btnReset = document.getElementById("btnReset");
+  const btnSolve = document.getElementById("btnSolve");
+  const btnPause = document.getElementById("btnPause");
+  const btnStep  = document.getElementById("btnStep");
+  const btnStop  = document.getElementById("btnStop");
+
+  const moveCountEl = document.getElementById("moveCount");
+  const minMovesEl  = document.getElementById("minMoves");
+  const actionEl    = document.getElementById("action");
+
+  let towers = { A: [], B: [], C: [] };   // arrays of disk sizes (smaller number = smaller disk)
+  let diskDomBySize = new Map();          // size -> DOM element
+  let moves = [];                         // planned move list: [{from,to}]
+  let moveIndex = 0;
+  let moveCount = 0;
+
+  let running = false;
+  let paused = false;
+  let stopRequested = false;
+
+  // ====== Utilities ======
+  function sleep(ms) {
+    return new Promise(res => setTimeout(res, ms));
+  }
+
+  function setAction(text) {
+    actionEl.textContent = text;
+  }
+
+  function updateStats(n) {
+    moveCountEl.textContent = String(moveCount);
+    const minMoves = (2 ** n) - 1;
+    minMovesEl.textContent = String(minMoves);
+  }
+
+  function clampDiskCount(n) {
+    if (Number.isNaN(n)) return 3;
+    return Math.max(1, Math.min(10, n));
+  }
+
+  // Create a nice color per disk size (no libraries).
+  function diskColor(size, n) {
+    // hue from 200..90 (blue->green) as size increases
+    const hue = 200 - Math.round((size - 1) * (110 / Math.max(1, n - 1)));
+    return `hsl(${hue}, 85%, 55%)`;
+  }
+
+  // ====== Rendering ======
+  function clearStacks() {
+    Object.values(stackEls).forEach(el => el.innerHTML = "");
+    diskDomBySize.clear();
+  }
+
+  function renderAll() {
+    // Re-render each tower stack based on towers object
+    for (const key of ["A","B","C"]) {
+      stackEls[key].innerHTML = "";
+      // towers[key] is bottom->top or top->bottom? We'll store bottom->top
+      // stack container uses column-reverse so DOM append in array order works
+      for (const size of towers[key]) {
+        const diskEl = diskDomBySize.get(size);
+        stackEls[key].appendChild(diskEl);
+      }
+    }
+  }
+
+  function createDisks(n) {
+    clearStacks();
+    towers = { A: [], B: [], C: [] };
+
+    // Largest disk at bottom: size n ... 1 at top. We'll store bottom->top: [n, n-1, ..., 1]
+    for (let size = n; size >= 1; size--) {
+      towers.A.push(size);
+
+      const disk = document.createElement("div");
+      disk.className = "disk";
+      disk.style.width = `${30 + (size * (50 / n))}%`; // 30%..80%
+      disk.style.background = diskColor(size, n);
+      disk.title = `Disk ${size}`;
+
+      diskDomBySize.set(size, disk);
+    }
+    renderAll();
+    moveCount = 0;
+    updateStats(n);
+    setAction("Ready.");
+  }
+
+  // ====== Hanoi Solver (Recursive planning) ======
+  function planMoves(n, from, aux, to) {
+    if (n === 0) return;
+    planMoves(n - 1, from, to, aux);
+    moves.push({ from, to, disk: n }); // disk number here is conceptual; actual top disk moved is smallest available
+    planMoves(n - 1, aux, from, to);
+  }
+
+  function generatePlan(n) {
+    moves = [];
+    moveIndex = 0;
+    planMoves(n, "A", "B", "C");
+  }
+
+  // ====== Move Execution ======
+  function topDisk(towerKey) {
+    // towers[towerKey] stored bottom->top, so top is last element
+    return towers[towerKey][towers[towerKey].length - 1];
+  }
+
+  function canMove(from, to) {
+    const a = topDisk(from);
+    if (a === undefined) return false;
+    const b = topDisk(to);
+    if (b === undefined) return true;
+    return a < b;
+  }
+
+  async function animateMove(from, to) {
+    const diskSize = topDisk(from);
+    const diskEl = diskDomBySize.get(diskSize);
+
+    setAction(`Move disk ${diskSize} : ${from} → ${to}`);
+    diskEl.classList.add("moving");
+
+    // visual "lift" effect
+    diskEl.style.transform = "translateY(-12px)";
+    await sleep(getSpeed());
+
+    // Update data model
+    towers[from].pop();
+    towers[to].push(diskSize);
+
+    // Re-render stacks instantly after the move
+    renderAll();
+
+    // visual "drop" effect
+    diskEl.style.transform = "translateY(0)";
+    await sleep(getSpeed());
+
+    diskEl.classList.remove("moving");
+    moveCount++;
+    moveCountEl.textContent = String(moveCount);
+  }
+
+  function getSpeed() {
+    return Number(speedInput.value);
+  }
+
+  // ====== Controls ======
+  function setUIBusy(isBusy) {
+    diskCountInput.disabled = isBusy;
+    btnSolve.disabled = isBusy;
+    btnStop.disabled = !isBusy;
+    btnPause.disabled = !isBusy;
+    btnStep.disabled = isBusy; // step is manual, allow only when not running auto
+  }
+
+  async function runAuto() {
+    running = true;
+    stopRequested = false;
+    paused = false;
+
+    setUIBusy(true);
+    btnPause.textContent = "Pause";
+
+    while (moveIndex < moves.length) {
+      if (stopRequested) break;
+
+      while (paused) {
+        await sleep(50);
+        if (stopRequested) break;
+      }
+      if (stopRequested) break;
+
+      const { from, to } = moves[moveIndex];
+
+      // Safety check (should always be valid in correct Hanoi)
+      if (!canMove(from, to)) {
+        setAction(`Invalid move attempted: ${from} → ${to}. Stopping.`);
+        break;
+      }
+
+      await animateMove(from, to);
+      moveIndex++;
+      await sleep(20);
+    }
+
+    if (!stopRequested && moveIndex >= moves.length) {
+      setAction("Completed! All disks moved to tower C ✅");
+    } else if (stopRequested) {
+      setAction("Stopped.");
+    }
+
+    running = false;
+    paused = false;
+    stopRequested = false;
+    setUIBusy(false);
+  }
+
+  function resetAll() {
+    const n = clampDiskCount(parseInt(diskCountInput.value, 10));
+    diskCountInput.value = n;
+    generatePlan(n);
+    createDisks(n);
+
+    // reset runner flags
+    running = false;
+    paused = false;
+    stopRequested = false;
+    setUIBusy(false);
+  }
+
+  async function doOneStep() {
+    if (running) return;
+
+    if (moveIndex >= moves.length) {
+      setAction("No more steps. Reset to run again.");
+      return;
+    }
+
+    const { from, to } = moves[moveIndex];
+    if (!canMove(from, to)) {
+      setAction(`Invalid move attempted: ${from} → ${to}.`);
+      return;
+    }
+
+    btnStep.disabled = true;
+    btnReset.disabled = true;
+    diskCountInput.disabled = true;
+
+    await animateMove(from, to);
+    moveIndex++;
+
+    if (moveIndex >= moves.length) {
+      setAction("Completed! All disks moved to tower C ✅");
+    }
+
+    btnStep.disabled = false;
+    btnReset.disabled = false;
+    diskCountInput.disabled = false;
+  }
+
+  // ====== Event Listeners ======
+  speedInput.addEventListener("input", () => {
+    speedLabel.textContent = String(speedInput.value);
+  });
+
+  btnReset.addEventListener("click", resetAll);
+
+  btnSolve.addEventListener("click", () => {
+    if (running) return;
+    runAuto();
+  });
+
+  btnPause.addEventListener("click", () => {
+    if (!running) return;
+    paused = !paused;
+    btnPause.textContent = paused ? "Resume" : "Pause";
+    setAction(paused ? "Paused." : "Resumed.");
+  });
+
+  btnStop.addEventListener("click", () => {
+    if (!running) return;
+    stopRequested = true;
+  });
+
+  btnStep.addEventListener("click", doOneStep);
+
+  diskCountInput.addEventListener("change", () => {
+    // Regenerate plan + reset disks when disk count changes
+    resetAll();
+  });
+
+  // ====== Init ======
+  speedLabel.textContent = String(speedInput.value);
+  resetAll();
+</script>
+
+</body>
+</html>
