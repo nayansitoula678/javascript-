@@ -19,13 +19,17 @@ let stopRequested = false;
 
 // ---------- Utils ----------
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function waitIfPaused() {
   while (paused && !stopRequested) {
     await sleep(50);
   }
+}
+
+function getSpeed() {
+  return Number(speedSlider.value);
 }
 
 function setUI(isRunning) {
@@ -39,12 +43,23 @@ function setUI(isRunning) {
   pauseBtn.textContent = paused ? "Resume" : "Pause";
 }
 
-function getSpeed() {
-  return Number(speedSlider.value);
+function clearClasses() {
+  bars.forEach(b => b.classList.remove("pivot", "compare", "swap", "sorted"));
 }
 
-function clearBarClasses() {
-  bars.forEach((b) => b.classList.remove("compare", "write", "sorted"));
+function paintRangeNormal(l, r) {
+  for (let i = l; i <= r; i++) {
+    bars[i].classList.remove("pivot", "compare", "swap");
+  }
+}
+
+function swap(i, j) {
+  const temp = array[i];
+  array[i] = array[j];
+  array[j] = temp;
+
+  bars[i].style.height = `${array[i]}px`;
+  bars[j].style.height = `${array[j]}px`;
 }
 
 // ---------- Generate ----------
@@ -66,7 +81,7 @@ function generateArray() {
     bars.push(bar);
   }
 
-  clearBarClasses();
+  clearClasses();
 }
 
 sizeSlider.addEventListener("input", () => {
@@ -76,93 +91,61 @@ speedSlider.addEventListener("input", () => {
   speedLabel.textContent = speedSlider.value;
 });
 
-// ---------- Merge Sort (Recursive) ----------
-async function mergeSort(l, r) {
+// ---------- Quick Sort (Recursive) ----------
+async function quickSort(l, r) {
   if (stopRequested) return;
-  if (l >= r) return;
-
-  const mid = Math.floor((l + r) / 2);
-  await mergeSort(l, mid);
-  await mergeSort(mid + 1, r);
-  await merge(l, mid, r);
-}
-
-async function merge(l, mid, r) {
-  if (stopRequested) return;
-
-  const left = array.slice(l, mid + 1);
-  const right = array.slice(mid + 1, r + 1);
-
-  let i = 0;
-  let j = 0;
-  let k = l;
-
-  // highlight range being merged
-  for (let x = l; x <= r; x++) {
-    bars[x].classList.add("compare");
+  if (l >= r) {
+    if (l === r) bars[l]?.classList.add("sorted");
+    return;
   }
+
+  const pivotIndex = r;           // pivot = last element (simple + common)
+  const pivotValue = array[pivotIndex];
+  bars[pivotIndex].classList.add("pivot");
   await sleep(getSpeed());
 
-  while (i < left.length && j < right.length) {
+  let i = l; // place for smaller elements
+
+  for (let j = l; j < r; j++) {
     if (stopRequested) return;
     await waitIfPaused();
 
-    // mark writing position
-    bars[k].classList.remove("compare");
-    bars[k].classList.add("write");
-
+    bars[j].classList.add("compare");
     await sleep(getSpeed());
 
-    if (left[i] <= right[j]) {
-      array[k] = left[i++];
-    } else {
-      array[k] = right[j++];
+    if (array[j] < pivotValue) {
+      bars[i].classList.add("swap");
+      bars[j].classList.add("swap");
+      await sleep(Math.max(10, getSpeed() / 2));
+
+      swap(i, j);
+
+      await sleep(Math.max(10, getSpeed() / 2));
+      bars[i].classList.remove("swap");
+      bars[j].classList.remove("swap");
+
+      i++;
     }
 
-    bars[k].style.height = `${array[k]}px`;
-    bars[k].classList.remove("write");
-    bars[k].classList.add("compare");
-
-    k++;
-    await sleep(Math.max(10, getSpeed() / 2));
+    bars[j].classList.remove("compare");
   }
 
-  while (i < left.length) {
-    if (stopRequested) return;
-    await waitIfPaused();
+  // final pivot swap into correct position
+  bars[i].classList.add("swap");
+  bars[pivotIndex].classList.add("swap");
+  await sleep(getSpeed());
 
-    bars[k].classList.remove("compare");
-    bars[k].classList.add("write");
-    await sleep(getSpeed());
+  swap(i, pivotIndex);
 
-    array[k] = left[i++];
-    bars[k].style.height = `${array[k]}px`;
+  await sleep(getSpeed());
+  paintRangeNormal(l, r);
 
-    bars[k].classList.remove("write");
-    bars[k].classList.add("compare");
-    k++;
-  }
+  bars[i].classList.remove("pivot", "swap", "compare");
+  bars[i].classList.add("sorted");
 
-  while (j < right.length) {
-    if (stopRequested) return;
-    await waitIfPaused();
-
-    bars[k].classList.remove("compare");
-    bars[k].classList.add("write");
-    await sleep(getSpeed());
-
-    array[k] = right[j++];
-    bars[k].style.height = `${array[k]}px`;
-
-    bars[k].classList.remove("write");
-    bars[k].classList.add("compare");
-    k++;
-  }
-
-  // remove highlight after merge
-  for (let x = l; x <= r; x++) {
-    bars[x].classList.remove("compare", "write");
-  }
+  // recurse left and right partitions
+  await quickSort(l, i - 1);
+  await quickSort(i + 1, r);
 }
 
 // ---------- Run / Controls ----------
@@ -173,16 +156,15 @@ async function startSort() {
   paused = false;
   stopRequested = false;
 
-  clearBarClasses();
+  clearClasses();
   setUI(true);
 
-  await mergeSort(0, array.length - 1);
+  await quickSort(0, array.length - 1);
 
-  // if not stopped, mark sorted
   if (!stopRequested) {
-    bars.forEach((b) => b.classList.add("sorted"));
+    bars.forEach(b => b.classList.add("sorted"));
   } else {
-    clearBarClasses();
+    clearClasses();
   }
 
   running = false;
@@ -192,7 +174,6 @@ async function startSort() {
 }
 
 generateBtn.addEventListener("click", generateArray);
-
 sortBtn.addEventListener("click", startSort);
 
 pauseBtn.addEventListener("click", () => {
