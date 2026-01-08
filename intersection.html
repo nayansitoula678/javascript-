@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>JavaScript Sets</h1>
+<h2>The intersection() Method</h2>
+
+<p>The intersection() method returns a new set containing the elements which are in this set
+and in the argument set:</p>
+
+<p id="demo"></p>
+
+<script>
+const A = new Set(['a','b','c']);
+const B = new Set(['b','c','d']);
+
+const C = A.intersection(B);
+
+let text = "";
+for (const x of C) {
+  text += x;
+}
+document.getElementById("demo").innerHTML = "The intersection is: " + text;
+</script>
+</body>
+</html>
